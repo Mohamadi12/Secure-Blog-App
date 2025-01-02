@@ -14,3 +14,10 @@ export const SchemaLogin = z.object({
     .string()
     .min(6, { message: "Password must be at least 6 characters long." }),
 });
+
+export const SchemaCreate = z.object({
+  title: z.string().min(1, {message: "Title is required"}),
+  content: z.string().min(1, {message: "content is required"}),
+  category: z.string().min(1, {message: "Category is required"}),
+  coverImage: z.string().min(1, {message: "Image is required"}),
+})

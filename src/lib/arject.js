@@ -48,4 +48,23 @@ export const loginRules = arcjet({
     }),
   ],
 });
+
+export const blogPostRules = arcjet({
+  key: process.env.ARCJET_KEY,
+  characteristics: ["ip.src"],
+  rules: [
+    detectBot({
+      mode: "LIVE",
+      allow: [],
+    }),
+    shield({ mode: "DRY_RUN" }),
+    // tokenBucket({
+    //   mode: "LIVE",
+    //   refillRate: 20,
+    //   interval: "1m",
+    //   capacity: 2,
+    // }),
+  ],
+});
+
 export default aj;
