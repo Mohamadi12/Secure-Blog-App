@@ -8,15 +8,15 @@ import { revalidatePath } from "next/cache";
 import { cookies, headers } from "next/headers";
 
 export async function createBlogPostAction(data) {
-    const token = (await cookies()).get("token")?.value;
-    const user = await verifyAuth(token);
-  
-    if (!user) {
-      return {
-        error: "Unauth user",
-        status: 401,
-      };
-    }
+  const token = (await cookies()).get("token")?.value;
+  const user = await verifyAuth(token);
+
+  if (!user) {
+    return {
+      error: "Unauth user",
+      status: 401,
+    };
+  }
 
   const validateFields = SchemaCreate.safeParse(data);
 
@@ -43,8 +43,6 @@ export async function createBlogPostAction(data) {
       },
       requested: 10,
     });
-
-    console.log(decision);
 
     if (decision.isErrored()) {
       return {
@@ -92,6 +90,113 @@ export async function createBlogPostAction(data) {
   } catch (e) {
     return {
       error: e,
+    };
+  }
+}
+
+export async function getBlogPostsAction() {
+  const token = (await cookies()).get("token")?.value;
+  const user = await verifyAuth(token);
+
+  if (!user) {
+    return {
+      error: "Unauth user",
+      status: 401,
+    };
+  }
+
+  try {
+    const req = await request();
+    const decision = await blogPostRules.protect(req, { requested: 10 });
+    if (decision.isDenied()) {
+      if (decision.reason.isRateLimit()) {
+        return {
+          error: "Rate limit excedeed! Please try after some time",
+          statu: 429,
+        };
+      }
+
+      if (decision.reason.isBot()) {
+        return {
+          error: "Bot activity detected",
+        };
+      }
+      return {
+        error: "Request denied",
+        status: 403,
+      };
+    }
+
+    await connectToDatabase();
+
+    const posts = await BlogPost.find({})
+      .sort({ createdAt: -1 })
+      .populate("author", "name");
+    const serializedPosts = posts.map((post) => ({
+      _id: post._id.toString(),
+      title: post.title,
+      coverImage: post.coverImage,
+      author: {
+        _id: post.author._id.toString(),
+        name: post.author.name,
+      },
+      category: post.category,
+      createdAt: post.createdAt.toISOString(),
+    }));
+
+    return {
+      success: true,
+      posts: serializedPosts,
+    };
+  } catch (e) {
+    return {
+      error: "Failed to fetch the blogs! Please try again",
+    };
+  }
+}
+
+export async function getBlogPostByIdAction(id) {
+  const token = (await cookies()).get("token")?.value;
+  const user = await verifyAuth(token);
+
+  if (!user) {
+    return {
+      error: "Unauth user",
+      status: 401,
+    };
+  }
+
+  try {
+    const req = await request();
+    const decision = await blogPostRules.protect(req, { requested: 5 });
+    if (decision.isDenied()) {
+      if (decision.reason.isRateLimit()) {
+        return {
+          error: "Rate limit excedeed! Please try after some time",
+          statu: 429,
+        };
+      }
+
+      if (decision.reason.isBot()) {
+        return {
+          error: "Bot activity detected",
+        };
+      }
+      return {
+        error: "Request denied",
+        status: 403,
+      };
+    }
+
+    await connectToDatabase();
+    const post = await BlogPost.findOne({ _id: id }).populate("author", "name");
+    return {
+      success: true,
+      post: JSON.stringify(post),
+    };
+  } catch (e) {
+    return {
+      error: "Failed to fetch the blog detail! Please try again",
     };
   }
 }

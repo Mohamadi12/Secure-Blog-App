@@ -21,3 +21,7 @@ export const SchemaCreate = z.object({
   category: z.string().min(1, {message: "Category is required"}),
   coverImage: z.string().min(1, {message: "Image is required"}),
 })
+
+export const BlogDetailsSchema = z.object({
+  content: z.string().min(1, {message: "comment is required"}),
+})

@@ -3,6 +3,7 @@ import arcjet, {
   protectSignup,
   shield,
   slidingWindow,
+  tokenBucket,
   validateEmail,
 } from "@arcjet/next";
 
@@ -64,6 +65,24 @@ export const blogPostRules = arcjet({
     //   interval: "1m",
     //   capacity: 2,
     // }),
+  ],
+});
+
+export const commentRules = arcjet({
+  key: process.env.ARCJET_KEY,
+  characteristics: ["ip.src"],
+  rules: [
+    detectBot({
+      mode: "LIVE",
+      allow: [],
+    }),
+    shield({ mode: "LIVE" }),
+    tokenBucket({
+      mode: "LIVE",
+      refillRate: 20,
+      interval: "1m",
+      capacity: 2,
+    }),
   ],
 });
 

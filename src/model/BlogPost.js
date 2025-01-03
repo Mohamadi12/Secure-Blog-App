@@ -8,9 +8,12 @@ const CommentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
-  createdAt: {
+  authorName: {
     type: String,
-    default: Date.now(),
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
   },
 });
 
@@ -29,8 +32,8 @@ const BlogPostSchema = new mongoose.Schema({
     ref: "User",
   },
   createdAt: {
-    type: String,
-    default: Date.now(),
+    type: Date,
+    default: Date.now,
   },
   category: {
     type: String,
